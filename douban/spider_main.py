@@ -2,6 +2,7 @@
 import re
 import sys
 import urllib2
+from time import sleep
 
 from  bs4 import BeautifulSoup
 
@@ -18,25 +19,24 @@ sys.setdefaultencoding("utf-8")
 
 
 class SpiderMain(object):
-    def __init__(self):
-        self.htmlOutPuter = html_outputer.HtmlOutputer()
+    def __init__(self,fileName):
+        self.htmlOutPuter = html_outputer.HtmlOutputer(fileName)
         return
 
-    def getData(self):
+    def getData(self,strurl):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.63 Safari/537.36',
             'Accept': 'text / html, application / xhtml + xml, application / xml;q = 0.9, image / webp, * / *;q = 0.8',
             'Referer': 'https://book.douban.com/people/drunkdoggy/wish'
         }
         # 定义一个读取网页的方法
-        url = "https://book.douban.com/people/70472267/collect"
-        req = urllib2.Request(url, headers=headers)
+        req = urllib2.Request(strurl, headers=headers)
         result = urllib2.urlopen(req).read()
         # print  result
         soup = BeautifulSoup(result, "html.parser")
-        #找到用户ID
-        imgs=soup.select("#db-usr-profile img")[0]
-        username=imgs.get("alt")
+        # 找到用户ID
+        imgs = soup.select("#db-usr-profile img")[0]
+        username = imgs.get("alt")
         allTags = list()
         allBooks = {}
         # tags = soup.find_all("li", class_=" clearfix")
@@ -81,8 +81,6 @@ class SpiderMain(object):
                 if pageUrls.__contains__(href.get("href")):
                     continue
                 pageUrls.append(href.get("href"))
-        else:
-            print "无爬取链接"
         for pageurl in pageUrls:
             req = urllib2.Request(pageurl, headers=headers)
             result = urllib2.urlopen(req).read()
@@ -94,8 +92,6 @@ class SpiderMain(object):
                     subTitle = tag.find("h2").find("span").text
                 else:
                     subTitle = ""
-                # print "Title=", title + subTitle
-                # print tag
                 tags = tag.find("span", class_="tags")
                 if tags is None:
                     continue
@@ -112,16 +108,20 @@ class SpiderMain(object):
                         allBooks[tag].append(title + subTitle)
         print 50 * " "
         print  "总共多少页:", pageCount
-        # print "所有标签:", ','.join(allTags)
-        # print "所有书:", allBooks
-        print "标签总数:"
-        return username,allTags, allBooks
+        print "标签总数:",len(allBooks)
+        return username, allTags, allBooks
 
 
 if __name__ == "__main__":
-    spider_object = SpiderMain()
-    username,allTags, allBooks = spider_object.getData()
-    spider_object.htmlOutPuter.writeDataDefault(username,allTags, allBooks)
-    spider_object.htmlOutPuter.save("result.xls")
-        # for book in allBooks[tag]:
-        #     print 10 * "*" + book
+    file=open("2.txt",'r')
+    allHrefs=file.readlines()
+    for href in allHrefs:
+        sleep(1)
+        fileName=re.findall("people\/(.*)\/collect",href)[0]+".xls"
+        print fileName
+        spider_object = SpiderMain(fileName)
+        username, allTags, allBooks = spider_object.getData(href)
+        spider_object.htmlOutPuter.writeDataDefault(username, allTags, allBooks)
+        spider_object.htmlOutPuter.save(fileName)
+
+

@@ -23,8 +23,8 @@ normal_style = xlwt.easyxf(
 
 ## Style variable End
 class HtmlOutputer(object):
-    def __init__(self):
-        if os.path.exists("result.xls") == False:
+    def __init__(self,fileName):
+        if os.path.exists(fileName) == False:
             # 判断文件是否存在，存在则跳过，不存在则新建
             self.book = Workbook(encoding='utf-8', style_compression=0)
             self.sheet = self.book.add_sheet('豆瓣标签结果', cell_overwrite_ok=True)
@@ -41,7 +41,7 @@ class HtmlOutputer(object):
             self.index = 1
             # sheet.write_merge(0, 5, 0, 1, "哈哈哈", normal_style)
         else:
-            rb = open_workbook('result.xls', formatting_info=True)  # 注意这里的workbook首字母是小写
+            rb = open_workbook(fileName, formatting_info=True)  # 注意这里的workbook首字母是小写
             r_sheet = rb.sheet_by_index(0)
             self.rowx = r_sheet.nrows
             firstColsValue = r_sheet.col_values(0)[::-1]
